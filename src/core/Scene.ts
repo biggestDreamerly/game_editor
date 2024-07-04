@@ -10,6 +10,7 @@ export class Scene extends Node {
 
   add_node(node: Node) {
     this.add_child(node);
+    // this.attachToTransformControls(node)
   }
 
   remove_node(node: Node) {

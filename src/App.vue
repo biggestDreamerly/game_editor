@@ -8,7 +8,8 @@ import { ref } from 'vue';
 import { onMounted, Ref } from 'vue';
 import { Engine, Node, Scene, MeshNode } from './core';
 import { EventManager } from './core/Event';
-
+import nodeTreePanelVue from './ui/nodeTreePanel.vue';
+import RightPanel from './ui/Panel/RIghtPanel.vue';
 const eventManager = ref(null) as Ref<EventManager | null>
 
 class a {
@@ -32,9 +33,9 @@ console.log(d.b, '========================>>')
 console.log(d, '========================>>')
 onMounted(() => {
   const editorPanel = document.getElementById('Editor_Panel');
-
+  console.log(editorPanel?.clientWidth, 'editorPanel')
   if (editorPanel) {
-    const __engine__ = new Engine(editorPanel);
+    const __engine__ = Engine.getInstance(editorPanel);
     eventManager.value = new EventManager();
     __engine__.registerResizeEvent(eventManager.value);
     const __scene__ = new Scene('root')
@@ -78,30 +79,16 @@ const onResize = (e: any) => {
   <ResizablePanelGroup id="handle-demo-group-1" direction="horizontal"
     class="min-h-screen min-w-screen rounded-lg border">
     <ResizablePanel id="handle-demo-panel-1" :default-size="25">
-      <div class="flex h-full items-center justify-center p-6">
-        <span class="font-semibold">Sidebar</span>
-      </div>
+      <nodeTreePanelVue></nodeTreePanelVue>
     </ResizablePanel>
     <ResizableHandle id="handle-demo-handle-1" with-handle />
     <ResizablePanel :onResize="onResize" id="handle-demo-panel-2" :default-size="50">
       <div id="Editor_Panel" class="h-full ">
-        <!-- <ResizablePanelGroup id="demo-group-2" direction="vertical">
-          <ResizablePanel id="demo-panel-3" :default-size="0">
-
-          </ResizablePanel>
-          <ResizableHandle id="demo-handle-2" />
-          <ResizablePanel :onResize="onResize" id="demo-panel-4" :default-size="100">
-            <div id="Editor_Panel" class=" h-full">
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup> -->
       </div>
     </ResizablePanel>
     <ResizableHandle id="handle-demo-handle-3" with-handle />
-    <ResizablePanel id="handle-demo-panel-3" :default-size="25">
-      <div class="flex h-full items-center justify-center p-6">
-        <span class="font-semibold">Sidebar2</span>
-      </div>
+    <ResizablePanel id="handle-demo-panel-3" class="bg-[#29292e]" :default-size="25">
+      <div id="rightCurrentPane" style="height: 100vh;" class="h-100vh p-4  overflow-scroll bg-[#29292e]"></div>
     </ResizablePanel>
   </ResizablePanelGroup>
 </template>

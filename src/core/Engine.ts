@@ -5,19 +5,22 @@ import { Scene } from './Scene';
 import { Node } from './Node';
 import CameraControls from 'ly-camera-controls';
 import * as THREE from 'three';
+import TweakpaneManager from './manager/TweakpaneManager';
 import { CustomTransformControls } from './helper/TransformControls';
 import { SelectionSystem } from './system/SelectionSystem';
-
+import { CustomTransformControlsSingleton } from './helper/CustomTransformControlsSingleton';
 export class Engine {
+  private static instance: Engine;
   private scenes: Scene[] = [];
   private running: boolean = false;
-  private renderer: WebGLRenderer;
-  private camera: PerspectiveCamera;
+  public renderer: WebGLRenderer;
+  public camera: PerspectiveCamera;
   private threeScene: ThreeScene;
   private container: HTMLElement;
   private gridHelper: GridHelper;
-  private cameraControls: CameraControls;
-  private customTransformControls: CustomTransformControls;
+  private tweakpaneManager: TweakpaneManager;
+  public cameraControls: CameraControls;
+  public customTransformControls: CustomTransformControls; // Change this line
   private selectionSystem: SelectionSystem; // Add this line
 
   constructor(container: HTMLElement) {
@@ -41,28 +44,32 @@ export class Engine {
     this.cameraControls.mouseButtons.left = CameraControls.ACTION.OFFSET;
     this.cameraControls.mouseButtons.right = CameraControls.ACTION.ROTATE;
     this.camera.position.set(0, 10, 10);
+    this.tweakpaneManager = new TweakpaneManager();
 
-    // Add custom transform controls
-    this.customTransformControls = new CustomTransformControls(this.camera, this.renderer, this.cameraControls);
+
+    this.customTransformControls = CustomTransformControlsSingleton.getInstance(this.camera, this.renderer, this.cameraControls);
     this.threeScene.add(this.customTransformControls.getControls());
-
     // Initialize SelectionSystem
     this.selectionSystem = new SelectionSystem(this.camera, this.threeScene); // Add this line
     this.selectionSystem.addEventListener('select', (event) => {
-      this.customTransformControls.attach(event.object);
+      this.customTransformControls.attach(event.object.parent);
+      this.tweakpaneManager.addInput(event.object.parent); // Add this line
     });
+    this.selectionSystem.container = this.container
   }
 
   private onWindowResize(container: HTMLElement) {
     this.camera.aspect = container.clientWidth / container.clientHeight;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(container.clientWidth, container.clientHeight);
+    this.container = container
+    this.selectionSystem.container = this.container
   }
 
   add_scene(scene: Scene) {
     this.scenes.push(scene);
     this.threeScene.add(scene); // Add the root node's Object3D to the three.js scene
-    this.customTransformControls.attach(scene); // Attach custom transform controls to the root node
+    // this.customTransformControls.attach(scene); // Attach custom transform controls to the root node
   }
 
   get_scene() {
@@ -118,5 +125,16 @@ export class Engine {
     eventManager.on('resize', () => {
       this.onWindowResize(this.container);
     });
+  }
+  public static getInstance(container?: HTMLElement): Engine {
+    if (!Engine.instance) {
+      Engine.instance = new Engine(container as a);
+    }
+    return Engine.instance;
+  }
+
+  // Add this method to get customTransformControls
+  getCustomTransformControls(): CustomTransformControls {
+    return this.customTransformControls;
   }
 }

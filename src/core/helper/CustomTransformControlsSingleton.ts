@@ -1,4 +1,4 @@
-import { CustomTransformControls } from './helper/TransformControls';
+import { CustomTransformControls } from './TransformControls';
 
 class CustomTransformControlsSingleton {
   private static instance: CustomTransformControls;

@@ -1,6 +1,7 @@
 import { TransformControls } from 'three/examples/jsm/controls/TransformControls';
 import { PerspectiveCamera, WebGLRenderer, Object3D } from 'three';
 import CameraControls from 'ly-camera-controls';
+import { SelectedObjectSingleton } from '../store/SelectedObjectSingletonSelectedObjectSingleton';
 
 export class CustomTransformControls {
   private transformControls: TransformControls;
@@ -19,6 +20,7 @@ export class CustomTransformControls {
   attach(object: Object3D) {
     this.attachedObject = object;
     this.transformControls.attach(object);
+    SelectedObjectSingleton.getInstance().setSelectedObject(object);
   }
 
   detach() {
