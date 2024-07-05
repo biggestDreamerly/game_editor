@@ -6,7 +6,7 @@ import {
 } from '@/components/ui/resizable'
 import { ref } from 'vue';
 import { onMounted, Ref } from 'vue';
-import { Engine, Node, Scene, MeshNode } from './core';
+import { Engine, Node, Scene, MeshNode, ModelNode } from './core';
 import { EventManager } from './core/Event';
 import nodeTreePanelVue from './ui/nodeTreePanel.vue';
 import RightPanel from './ui/Panel/RIghtPanel.vue';
@@ -41,6 +41,8 @@ onMounted(() => {
     const __scene__ = new Scene('root')
     const __node__ = new MeshNode('mesh')
     const __node__1 = new MeshNode('mesh1')
+    const model = new ModelNode('model')
+    model.loadModel("/src/assets/主变压器.FBX")
     __node__1.position.y = 10
     __node__.position.y = 5
     __node__.script = 1
@@ -48,6 +50,7 @@ onMounted(() => {
     console.log(__node__, '__node__')
     __scene__.add_node(__node__)
     __scene__.add_node(__node__1)
+    __scene__.add_node(model)
     __engine__.add_scene(__scene__)
     __node__.script = {
       update: (_this: any) => {

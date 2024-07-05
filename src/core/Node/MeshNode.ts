@@ -54,38 +54,6 @@ export class MeshNode extends Node {
     this.mesh.material = this.material;
   }
 
-  async loadModel(url: string) {
-    const extension = url.split('.').pop()?.toLowerCase();
-    let loader: GLTFLoader | OBJLoader;
-
-    switch (extension) {
-      case 'gltf':
-      case 'glb':
-        loader = new GLTFLoader();
-        break;
-      case 'obj':
-        loader = new OBJLoader();
-        break;
-      case 'fbx':
-        loader = new FBXLoader();
-        break;
-      default:
-        console.error('Unsupported model format.');
-        return;
-    }
-
-    try {
-      const model = await new Promise<Object3D>((resolve, reject) => {
-        loader.load(url, resolve, undefined, reject);
-      });
-
-      this.remove(this.mesh);
-      this.mesh = model as Mesh;
-      this.add(this.mesh);
-    } catch (error) {
-      console.error('Error loading model:', error);
-    }
-  }
 
   resetToPrimitive(type: 'box' | 'sphere') {
     this.remove(this.mesh);
