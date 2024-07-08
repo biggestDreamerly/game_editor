@@ -4,38 +4,22 @@ import {
   ResizablePanel,
   ResizablePanelGroup,
 } from '@/components/ui/resizable'
+import { globalStore, testDemo } from './core/store/sceneGraphMap'
 import { ref } from 'vue';
-import { onMounted, Ref } from 'vue';
+import { onMounted, Ref, watch, onBeforeUnmount } from 'vue';
 import { Engine, Node, Scene, MeshNode, ModelNode } from './core';
 import { EventManager } from './core/Event';
+import { AmbientLight, PointLight, PointLightHelper, Object3D } from 'three';
+import { DirectionalLightNode, PointLightNode, SpotLightNode } from './core/node/lights';
 import nodeTreePanelVue from './ui/nodeTreePanel.vue';
 import RightPanel from './ui/Panel/RIghtPanel.vue';
 const eventManager = ref(null) as Ref<EventManager | null>
-
-class a {
-  get b() {
-    return 1
-  }
-  set b(v) {
-    alert(v)
-  }
-}
-class c extends a {
-  get b() {
-    return 2
-  }
-  set b(v) {
-    alert(3)
-  }
-}
-const d = new c()
-console.log(d.b, '========================>>')
-console.log(d, '========================>>')
+let __engine__ = null
 onMounted(() => {
   const editorPanel = document.getElementById('Editor_Panel');
   console.log(editorPanel?.clientWidth, 'editorPanel')
   if (editorPanel) {
-    const __engine__ = Engine.getInstance(editorPanel);
+    __engine__ = Engine.getInstance(editorPanel);
     eventManager.value = new EventManager();
     __engine__.registerResizeEvent(eventManager.value);
     const __scene__ = new Scene('root')
@@ -44,14 +28,17 @@ onMounted(() => {
     const model = new ModelNode('model')
     model.loadModel("/src/assets/主变压器.FBX")
     __node__1.position.y = 10
-    __node__.position.y = 5
+    __node__.position.y = 1
     __node__.script = 1
+    __node__.toJSON()
+    console.log(__node__, 'Node')
     console.log(__node__1, '__node__1')
     console.log(__node__, '__node__')
     __scene__.add_node(__node__)
     __scene__.add_node(__node__1)
     __scene__.add_node(model)
     __engine__.add_scene(__scene__)
+    console.log(globalStore.value.values().next().value.children, 'store')
     __node__.script = {
       update: (_this: any) => {
         // console.log('update', __scene__.position)
@@ -63,19 +50,58 @@ onMounted(() => {
         // console.log(_this, 'this')
       }
     }
+    // Add ambient light
+    const ambientLight = new AmbientLight(0xffffff, 10.5);
+    // const o = new Object3D()
+    // const p = new PointLight(0xffffff, 100)
+    // const ph = new PointLightHelper(p)
+    // o.add(p)
+    // o.add(ph)
+    // o.position.set(0, 10, 0)
+    // ph.position.set(0, 10, 0)
+    // __engine__.add_light(o);
+    // __engine__.add_light(p);
+
+    // Add point light
+    const pointLight = new PointLightNode('ponit1', 0xffffff, 1000, 100, 100);
+    const dLight = new DirectionalLightNode('ponit1', 0xffffff, 10, 3);
+    pointLight.position.set(0, 10, 0);
+    dLight.position.set(0, 10, 0);
+    // pointLight.light.position.set(0, 10, 0);
+    console.log(pointLight.light, 'pointLight.light')
+    __scene__.add_node(pointLight);
+    // __engine__.add_light(dLight);
     __engine__.start()
-
+    store.value = globalStore.value.values().next().value.children
     console.log(__engine__.get_scene())
+    setTimeout(() => {
+      let n = new MeshNode('mesh2')
+      n.position.set(0, 13, 0)
+      __scene__.add_node(n)
+      let json = __scene__.toJSON()
+      alert(1)
+      console.log(JSON.stringify(json), 'json')
+      // __scene__.children.forEach(element => {
 
+      // });
+    }, 3000)
   } else {
     console.error('Editor_Panel element not found');
   }
 })
+onBeforeUnmount(() => {
+  __engine__.clearThreeScene()
+  // Add any other cleanup logic here
+})
 
+
+
+const store = ref()
 const onResize = (e: any) => {
   console.log(e)
   eventManager.value!.emit('resize');
 }
+console.log(globalStore.value, 'globalStore')
 </script>
 
 <template>
@@ -83,6 +109,9 @@ const onResize = (e: any) => {
     class="min-h-screen min-w-screen rounded-lg border">
     <ResizablePanel id="handle-demo-panel-1" :default-size="25">
       <nodeTreePanelVue></nodeTreePanelVue>
+      <div v-for="i in  globalStore" :key="i">
+        {{ i.name }}
+      </div>
     </ResizablePanel>
     <ResizableHandle id="handle-demo-handle-1" with-handle />
     <ResizablePanel :onResize="onResize" id="handle-demo-panel-2" :default-size="50">

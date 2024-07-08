@@ -3,7 +3,7 @@ import { ObservableProperty, applyObservableProperties } from './decorators/Obse
 import { CustomTransformControlsSingleton } from './helper/CustomTransformControlsSingleton';
 import { Engine } from './Engine';
 import { SelectionSystem } from './system/SelectionSystem'
-
+import { globalStore, testDemo } from './store/sceneGraphMap';
 abstract class AbstractNode {
   // 子节点数组
   protected children: Node[] = [];
@@ -55,7 +55,10 @@ class Signal extends Object3D {
   }
 }
 
+
 export class Node extends Signal {
+  public $type: string = 'Node'
+
   // 脚本对象
   public script: any = null;
   // 节点名称
@@ -83,6 +86,13 @@ export class Node extends Signal {
   setGeometry(geometry: BufferGeometry) {
     this.mesh.geometry = geometry;
   }
+  copyFrom(obj: any) {
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        (this as any)[key] = obj[key];
+      }
+    }
+  }
 
   /**
    * 设置节点网格的材质
@@ -100,6 +110,8 @@ export class Node extends Signal {
   add_child(child: Node) {
     this.add(child);
     this.node_children.push(child);
+    globalStore.value.push(child)
+    console.log(globalStore.value, 'globalStore.value')
     console.log(this, 'this');
   }
 
@@ -194,5 +206,77 @@ export class Node extends Signal {
     const { camera, renderer, cameraControls } = Engine.getInstance();
     const customTransformControls = CustomTransformControlsSingleton.getInstance(camera, renderer, cameraControls);
     customTransformControls.attach(node ?? this);
+  }
+
+  /**
+   * 卸载此节点及其资源
+   */
+  unload() {
+    // 卸载子节点
+    for (const child of this.node_children) {
+      child.unload();
+    }
+    this.node_children = [];
+
+    // 卸载几何体
+    if (this.mesh.geometry) {
+      this.mesh.geometry.dispose();
+    }
+
+    // 卸载材质
+    if (this.mesh.material) {
+      if (Array.isArray(this.mesh.material)) {
+        this.mesh.material.forEach(material => material.dispose());
+      } else {
+        this.mesh.material.dispose();
+      }
+    }
+
+    // 从父节点中移除
+    if (this.parent) {
+      this.parent.remove_child(this);
+    }
+
+    // 清理信号
+    for (const signal in this.signals) {
+      delete this.signals[signal];
+    }
+
+    // 清理脚本
+    this.script = null;
+
+    // 清理网格
+    this.mesh = null;
+
+    // 从选择系统中移除
+    SelectionSystem.selectStore.delete(this.uuid);
+
+    console.log(`Node ${this.name} unloaded`);
+  }
+  /**
+   * 将此节点序列化为 JSON
+   * @returns JSON 对象
+   */
+  toJSON() {
+    const obj: any = {};
+    for (const key in this) {
+      if (this.hasOwnProperty(key) && typeof (this as any)[key] !== 'function' && typeof (this as any)[key] !== 'object') {
+        obj[key] = (this as any)[key];
+      }
+    }
+    console.log(obj, 'toJSON result');
+
+    return { ...obj, ...super.toJSON() };
+  }
+
+  /**
+   * 从 JSON 数据反序列化并重建节点
+   * @param json - JSON 数据
+   * @returns Node 实例
+   */
+  static fromJSON(json: any): Node {
+    const loader = new ObjectLoader();
+    const object = loader.parse(json);
+    return object as Node;
   }
 }

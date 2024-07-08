@@ -1,4 +1,5 @@
 import { Node } from '../Node';
+import { MeshNode } from './MeshNode';
 import { Mesh, BufferGeometry, MeshBasicMaterial, SphereGeometry, BoxGeometry, Material, Object3D, Color, Group } from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
 import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
@@ -10,16 +11,10 @@ export class ModelNode extends Node {
   public material: Material;
   public geometry: BufferGeometry;
   public mesh: Mesh;
-
+  public modelPath: string
   constructor(name: string, geometry?: BufferGeometry, material?: Material) {
     super(name, 0, 0); // 默认位置为 (0, 0)
-    // this.material = material || new MeshBasicMaterial({ color: new Color('#ffffff') });
-    // this.geometry = geometry || new BoxGeometry(1, 1, 1);
-    // this.mesh = new Mesh(this.geometry, this.material);
-    // this.add(this.mesh);
-    // // Apply proxy to this instance
-    // // return applyObservableProperties(this);
-    // console.log(this.position, 'this');
+    this.$type = 'ModelNode'
   }
 
   updateUI(property: string, value: any) {
@@ -77,6 +72,7 @@ export class ModelNode extends Node {
   }
 
   async loadModel(url: string) {
+    this.modelPath = url
     const extension = url.split('.').pop()?.toLowerCase();
     let loader: GLTFLoader | OBJLoader;
 
@@ -129,10 +125,14 @@ export class ModelNode extends Node {
     source.children.forEach(child => {
       let newChild: Object3D;
       if (child instanceof Mesh) {
-        newChild = new Mesh(child.geometry, child.material);
-        newChild.position.copy(child.position);
-        newChild.rotation.copy(child.rotation);
-        newChild.scale.copy(child.scale);
+        newChild = new MeshNode(child.name, child.geometry, child.material, true);
+        newChild.add(child)
+        newChild.mesh = child
+        // newChild.position.copy(child.position);
+        // newChild.rotation.copy(child.rotation);
+        // newChild.scale.copy(child.scale);
+        newChild.castShadow = child.castShadow;
+        newChild.receiveShadow = child.receiveShadow;
       } else if (child instanceof Group) {
         newChild = new Group();
       } else {

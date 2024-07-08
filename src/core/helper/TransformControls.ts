@@ -39,14 +39,16 @@ export class CustomTransformControls {
   }
 
   private onTransformEnd() {
+
     this.cameraControls.enabled = true;
     // Unregister global event here
+    this.detach()
     console.log('Transform ended');
   }
 
   private onTransformChange() {
     if (this.attachedObject) {
-      this.attachedObject.updateMatrixWorld(true);
+      // this.attachedObject.updateMatrixWorld(true);
       console.log('Updated position:', this.attachedObject.position);
     }
   }

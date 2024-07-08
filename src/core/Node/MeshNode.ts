@@ -11,12 +11,15 @@ export class MeshNode extends Node {
   public geometry: BufferGeometry;
   public mesh: Mesh;
 
-  constructor(name: string, geometry?: BufferGeometry, material?: Material) {
+  constructor(name: string, geometry?: BufferGeometry, material?: Material, IsCopy: Boolean = false) {
     super(name, 0, 0); // 默认位置为 (0, 0)
-    this.material = material || new MeshBasicMaterial({ color: new Color('#ffffff') });
-    this.geometry = geometry || new BoxGeometry(1, 1, 1);
-    this.mesh = new Mesh(this.geometry, this.material);
-    this.add(this.mesh);
+    this.$type = 'MeshNode'
+    if (!IsCopy) {
+      this.material = material || new MeshBasicMaterial({ color: new Color('#ffffff') });
+      this.geometry = geometry || new BoxGeometry(1, 1, 1);
+      this.mesh = new Mesh(this.geometry, this.material);
+      this.add(this.mesh);
+    }
     // Apply proxy to this instance
     // return applyObservableProperties(this);
     console.log(this.position, 'this');
